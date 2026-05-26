@@ -15,9 +15,17 @@
         .status-loading { background: #fffbe6; color: #faad14; }
         #qrContainer { text-align: center; margin: 2rem 0; padding: 20px; border: 2px dashed #ddd; border-radius: 8px; }
         #qrCode { max-width: 300px; display: none; margin: 0 auto; }
-        .controls { display: flex; gap: 10px; margin-top: 1rem; }
+        .controls { display: flex; gap: 10px; margin-top: 1rem; align-items: center; flex-wrap: wrap; }
+        .toggle-container { display: flex; align-items: center; gap: 10px; background: #f8f9fa; padding: 10px 15px; border-radius: 6px; border: 1px solid #ddd; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #008069; }
+        input:checked + .slider:before { transform: translateX(26px); }
         button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-disconnect { background: #d93025; color: white; }
+        .btn-reset { background: #ff4d4f; color: white; border: 1px solid #d93025; }
         .btn-connect { background: #008069; color: white; }
         .btn-logout { background: #666; color: white; }
         #logs { background: #1c1e21; color: #00ff00; padding: 15px; border-radius: 6px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px; margin-top: 20px; }
@@ -38,6 +46,14 @@
         <div class="controls">
             <button id="connectBtn" class="btn-connect">Connect WhatsApp</button>
             <button id="disconnectBtn" class="btn-disconnect" style="display:none;">Disconnect</button>
+            <button id="resetBtn" class="btn-reset" style="display:none;">Logout & Reset</button>
+            <div class="toggle-container">
+                <span>Auto-Reply</span>
+                <label class="switch">
+                    <input type="checkbox" id="autoReplyToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
             <button id="logoutBtn" class="btn-logout">Logout</button>
         </div>
 
@@ -53,6 +69,8 @@
         const qrMsg = document.getElementById('qrMsg');
         const connectBtn = document.getElementById('connectBtn');
         const disconnectBtn = document.getElementById('disconnectBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const autoReplyToggle = document.getElementById('autoReplyToggle');
         const logoutBtn = document.getElementById('logoutBtn');
         const logsDiv = document.getElementById('logs');
 
@@ -73,13 +91,18 @@
                 qrMsg.textContent = 'WhatsApp is connected!';
                 connectBtn.style.display = 'none';
                 disconnectBtn.style.display = 'inline-block';
+                resetBtn.style.display = 'inline-block';
             } else if (status === 'loading') {
                 statusBadge.className = 'status-badge status-loading';
                 qrMsg.textContent = 'Initializing...';
+                connectBtn.style.display = 'none';
+                disconnectBtn.style.display = 'inline-block';
+                resetBtn.style.display = 'none';
             } else {
                 statusBadge.className = 'status-badge status-disconnected';
                 connectBtn.style.display = 'inline-block';
                 disconnectBtn.style.display = 'none';
+                resetBtn.style.display = 'none';
             }
         });
 
@@ -98,6 +121,16 @@
             addLog('Authenticated successfully!');
         });
 
+        socket.on('autoReply-status', (enabled) => {
+            autoReplyToggle.checked = enabled;
+            addLog(`Auto-reply is now ${enabled ? 'ON' : 'OFF'}`);
+        });
+
+        autoReplyToggle.addEventListener('change', () => {
+            const isEnabled = autoReplyToggle.checked;
+            socket.emit('toggle-autoreply', isEnabled);
+        });
+
         connectBtn.addEventListener('click', () => {
             addLog('Requesting connection...');
             socket.emit('request-connect');
@@ -107,6 +140,13 @@
             if (confirm('Are you sure you want to disconnect?')) {
                 addLog('Requesting disconnection...');
                 socket.emit('request-disconnect');
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            if (confirm('This will logout and DELETE your session. You will need to scan the QR code again. Proceed?')) {
+                addLog('Requesting session reset...');
+                socket.emit('request-reset');
             }
         });
 

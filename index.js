@@ -9,11 +9,23 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+const Fuse = require('fuse.js');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 const port = process.env.PORT || 3000;
+
+// --- Load Knowledge Base ---
+const knowledgeFile = path.join(__dirname, 'knowledge.json');
+let knowledge = JSON.parse(fs.readFileSync(knowledgeFile, 'utf8'));
+
+// Setup Fuse.js for searching services
+const fuseOptions = {
+    keys: ['name', 'keywords', 'description'],
+    threshold: 0.4
+};
+const fuse = new Fuse(knowledge.services, fuseOptions);
 
 // --- Middlewares ---
 app.use(bodyParser.json());
@@ -22,7 +34,7 @@ app.use(session({
     secret: 'whatsapp-bot-secret',
     resave: false,
     saveUninitialized: true,
-    cookie: { secure: false } // Set to true if using HTTPS
+    cookie: { secure: false }
 }));
 
 // --- Auth Logic ---
@@ -65,6 +77,7 @@ app.get('/logout', (req, res) => {
 // --- WhatsApp Client Logic ---
 let client;
 let botStatus = 'disconnected';
+let autoReplyEnabled = true;
 
 const createClient = () => {
     if (client) return;
@@ -97,8 +110,6 @@ const createClient = () => {
     client.on('qr', async (qr) => {
         console.log('QR RECEIVED');
         qrcodeTerminal.generate(qr, { small: true });
-        
-        // Convert QR to Image for UI
         const qrImage = await qrcodeImage.toDataURL(qr);
         io.emit('qr', qrImage);
         botStatus = 'disconnected';
@@ -126,13 +137,60 @@ const createClient = () => {
     });
 
     client.on('message', async (msg) => {
-        const messageBody = msg.body.toLowerCase().trim();
-        const greetings = ['hello', 'hi', 'hey'];
+        if (!autoReplyEnabled) return;
+
+        console.log(`Incoming message from ${msg.from}: ${msg.body}`);
+
+        const text = (msg.body || '').toLowerCase().trim();
         
-        if (greetings.includes(messageBody)) {
-            await msg.reply('Hey there! This is an automated reply. How can I help you today?');
-        } else if (messageBody.includes('price') || messageBody.includes('cost')) {
-            await msg.reply('Thanks for asking! Our basic services are free.');
+        // --- 1. Handle Numeric Menu Selection ---
+        const serviceBySelection = knowledge.services.find(s => s.id === text);
+        
+        if (serviceBySelection) {
+            console.log(`Matching service found for ID ${text}: ${serviceBySelection.name}`);
+            return msg.reply(`*${serviceBySelection.name}*\n\n${serviceBySelection.description}\n\nReply with another number or "menu" to see all options.`);
+        }
+
+        // --- 2. Greetings & Text-Based Menu Display ---
+        const greetings = ['hi', 'hello', 'hey', 'menu', 'products', 'services'];
+        if (greetings.includes(text)) {
+            console.log('Greeting detected, sending text menu...');
+            let menuMessage = `Welcome to *${knowledge.company_info.name}*!\n\nHow can we help you today? Please reply with a number to get more details:\n\n`;
+            
+            knowledge.services.forEach(s => {
+                menuMessage += `*${s.id}*. ${s.name}\n`;
+            });
+            
+            menuMessage += `\n*9*. Contact Info\n*10*. About Us\n\n_Type a number to select._`;
+            return msg.reply(menuMessage);
+        }
+
+        // --- 3. Contact Info (Selection 9) ---
+        if (text === '9' || text.includes('contact') || text.includes('phone') || text.includes('email')) {
+            return msg.reply(`📞 *Contact Us*\n\nPhone: ${knowledge.contact.phone}\nEmail: ${knowledge.contact.email}\nAddress: ${knowledge.contact.address}`);
+        }
+
+        // --- 4. About Us (Selection 10) ---
+        if (text === '10' || text.includes('about') || text.includes('company')) {
+            return msg.reply(`🏢 *About Us*\n\n${knowledge.company_info.about}`);
+        }
+
+        // --- 5. Fuzzy Search (Fuse.js) for keywords ---
+        const results = fuse.search(text);
+        if (results.length > 0) {
+            const bestMatch = results[0].item;
+            return msg.reply(`*${bestMatch.name}*\n\n${bestMatch.description}`);
+        }
+
+        // --- 6. Pricing ---
+        if (text.includes('price') || text.includes('cost') || text.includes('quote')) {
+            return msg.reply(`For pricing and custom quotes, please contact us at ${knowledge.contact.phone} or email us at ${knowledge.contact.email}. You can also reply with "menu" to see our services.`);
+        }
+
+        // --- 7. Fallback ---
+        // Only reply if the message is short (to avoid replying to long random messages)
+        if (text.length < 20) {
+            msg.reply(`I'm not sure about that. Reply with "menu" to see our service list!`);
         }
     });
 
@@ -147,19 +205,56 @@ const createClient = () => {
 io.on('connection', (socket) => {
     console.log('New client connected');
     socket.emit('status', botStatus);
+    socket.emit('autoReply-status', autoReplyEnabled);
 
     socket.on('request-connect', () => {
         createClient();
     });
 
+    socket.on('toggle-autoreply', (enabled) => {
+        autoReplyEnabled = enabled;
+        console.log(`Auto-reply toggled to: ${autoReplyEnabled}`);
+        io.emit('autoReply-status', autoReplyEnabled);
+    });
+
     socket.on('request-disconnect', async () => {
         if (client) {
-            await client.logout();
-            await client.destroy();
+            try {
+                await client.destroy();
+            } catch (e) {
+                console.error('Error destroying client:', e);
+            }
             client = null;
             botStatus = 'disconnected';
             io.emit('status', botStatus);
         }
+    });
+
+    socket.on('request-reset', async () => {
+        if (client) {
+            try {
+                await client.logout();
+                await client.destroy();
+            } catch (e) {
+                console.error('Error during logout/reset:', e);
+            }
+            client = null;
+        }
+        
+        // Delete the auth folder for a fresh start
+        const authPath = path.join(__dirname, '.wwebjs_auth');
+        if (fs.existsSync(authPath)) {
+            try {
+                fs.rmSync(authPath, { recursive: true, force: true });
+                console.log('Session folder deleted');
+            } catch (err) {
+                console.error('Failed to delete session folder:', err);
+            }
+        }
+        
+        botStatus = 'disconnected';
+        io.emit('status', botStatus);
+        io.emit('qr', ''); // Clear QR on UI
     });
 });
 
