@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bot Dashboard</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 1rem; margin-bottom: 1rem; }
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; }
+        .status-connected { background: #e7f8f2; color: #008069; }
+        .status-disconnected { background: #fff1f0; color: #d93025; }
+        .status-loading { background: #fffbe6; color: #faad14; }
+        #qrContainer { text-align: center; margin: 2rem 0; padding: 20px; border: 2px dashed #ddd; border-radius: 8px; }
+        #qrCode { max-width: 300px; display: none; margin: 0 auto; }
+        .controls { display: flex; gap: 10px; margin-top: 1rem; }
+        button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-disconnect { background: #d93025; color: white; }
+        .btn-connect { background: #008069; color: white; }
+        .btn-logout { background: #666; color: white; }
+        #logs { background: #1c1e21; color: #00ff00; padding: 15px; border-radius: 6px; height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>WhatsApp Bot Control</h1>
+            <div id="statusBadge" class="status-badge status-disconnected">Disconnected</div>
+        </div>
+
+        <div id="qrContainer">
+            <p id="qrMsg">Waiting for connection request...</p>
+            <img id="qrCode" src="" alt="QR Code">
+        </div>
+
+        <div class="controls">
+            <button id="connectBtn" class="btn-connect">Connect WhatsApp</button>
+            <button id="disconnectBtn" class="btn-disconnect" style="display:none;">Disconnect</button>
+            <button id="logoutBtn" class="btn-logout">Logout</button>
+        </div>
+
+        <div id="logs">
+            <div>Dashboard ready...</div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const statusBadge = document.getElementById('statusBadge');
+        const qrCodeImg = document.getElementById('qrCode');
+        const qrMsg = document.getElementById('qrMsg');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const logsDiv = document.getElementById('logs');
+
+        function addLog(msg) {
+            const div = document.createElement('div');
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logsDiv.appendChild(div);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        socket.on('status', (status) => {
+            addLog(`Status updated: ${status}`);
+            statusBadge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+            
+            if (status === 'connected') {
+                statusBadge.className = 'status-badge status-connected';
+                qrCodeImg.style.display = 'none';
+                qrMsg.textContent = 'WhatsApp is connected!';
+                connectBtn.style.display = 'none';
+                disconnectBtn.style.display = 'inline-block';
+            } else if (status === 'loading') {
+                statusBadge.className = 'status-badge status-loading';
+                qrMsg.textContent = 'Initializing...';
+            } else {
+                statusBadge.className = 'status-badge status-disconnected';
+                connectBtn.style.display = 'inline-block';
+                disconnectBtn.style.display = 'none';
+            }
+        });
+
+        socket.on('qr', (src) => {
+            addLog('New QR code received');
+            qrCodeImg.src = src;
+            qrCodeImg.style.display = 'block';
+            qrMsg.textContent = 'Scan the QR code to connect:';
+        });
+
+        socket.on('ready', () => {
+            addLog('WhatsApp is ready!');
+        });
+
+        socket.on('authenticated', () => {
+            addLog('Authenticated successfully!');
+        });
+
+        connectBtn.addEventListener('click', () => {
+            addLog('Requesting connection...');
+            socket.emit('request-connect');
+        });
+
+        disconnectBtn.addEventListener('click', () => {
+            if (confirm('Are you sure you want to disconnect?')) {
+                addLog('Requesting disconnection...');
+                socket.emit('request-disconnect');
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            window.location.href = '/logout';
+        });
+    </script>
+</body>
+</html>
