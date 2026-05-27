@@ -142,8 +142,15 @@ const createClient = () => {
     client.on('qr', async (qr) => {
         console.log('QR RECEIVED');
         qrcodeTerminal.generate(qr, { small: true });
-        const qrImage = await qrcodeImage.toDataURL(qr);
-        io.emit('qr', qrImage);
+        
+        try {
+            const qrImage = await qrcodeImage.toDataURL(qr);
+            io.emit('qr', qrImage);
+            console.log('QR sent to UI');
+        } catch (err) {
+            console.error('Error generating QR Image:', err);
+        }
+        
         botStatus = 'disconnected';
         io.emit('status', botStatus);
     });
