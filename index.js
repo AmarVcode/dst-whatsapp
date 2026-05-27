@@ -261,6 +261,14 @@ async function connectToWhatsApp() {
                 replyText = `*DST LogiPack - Get a Quote* ✍️📊\n\nWe would love to provide you with a customized quotation! Please reply with:\n\n1️⃣ *Your Name & Company Name*\n2️⃣ *Required Service* (e.g., EPAL Pallets, Warehousing, Freight)\n3️⃣ *Dimensions / Weight / Volume*\n4️⃣ *Quantity / Frequency*\n\nOnce you reply, our sales representative will reach out to you within 30 minutes!`;
             } else if (cleanText.includes('track') || cleanText.includes('status') || cleanText.includes('where') || cleanText.includes('cargo') || cleanText.includes('booking') || cleanText.includes('container')) {
                 replyText = `*DST LogiPack - Track Shipment* 📍🚢\n\nTo track your consignment, please reply with your:\n• *Booking Number* (e.g. DST-XXXX)\n• *Container Number*\n\nAlternatively, you can track it directly on our customer calculator portal: https://dstlogipack.com/calc`;
+            } else if (cleanText.includes('time') || cleanText.includes('hour') || cleanText.includes('timing') || cleanText.includes('open') || cleanText.includes('working')) {
+                replyText = `*DST LogiPack - Working Hours* ⏰\n\nOur office and manufacturing facilities operate during the following hours:\n• *Monday to Saturday:* 9:00 AM – 6:30 PM\n• *Sunday:* Closed (Emergency cargo support available via call)`;
+            } else if (cleanText.includes('appointment') || cleanText.includes('schedule') || cleanText.includes('book') || cleanText.includes('meeting') || cleanText.includes('visit') || cleanText.includes('consultation')) {
+                replyText = `*DST LogiPack - Schedule a Meeting* 📅👔\n\nWe would be happy to schedule a consultation with our logistics specialists! Please reply with:\n\n1️⃣ *Preferred Date & Time*\n2️⃣ *Meeting Type* (Voice Call, Video Call, or Site/Office Visit)\n3️⃣ *Key Topic of Discussion*\n\nOur team will confirm your slot and send a calendar invite shortly.`;
+            } else {
+                // Fallback / Sorry message when no keywords match
+                replyText = `Sorry, I didn't quite catch that. 🤖\n\nI am the DST LogiPack digital assistant. I can help you with EPAL Pallets, Wooden Crates, Fumigation Compliance, Freight Bookings, Warehousing, or Custom Calculations.\n\n💡 *Type "menu" to see all options, "quote" to get an estimate, or "contact" to reach our team.*`;
+                showFooter = false;
             }
 
             if (replyText) {
