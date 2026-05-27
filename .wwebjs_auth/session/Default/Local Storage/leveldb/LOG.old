@@ -1,6 +1,0 @@
-2026/05/27-02:45:30.657 4964 Reusing MANIFEST C:\Users\Amar\Documents\GitHub\dst-whatsapp\.wwebjs_auth\session\Default\Local Storage\leveldb/MANIFEST-000001
-2026/05/27-02:45:30.674 4964 Recovering log #3
-2026/05/27-02:45:30.682 4964 Reusing old log C:\Users\Amar\Documents\GitHub\dst-whatsapp\.wwebjs_auth\session\Default\Local Storage\leveldb/000003.log 
-2026/05/27-02:45:44.425 2e68 Level-0 table #5: started
-2026/05/27-02:45:44.441 2e68 Level-0 table #5: 20381 bytes OK
-2026/05/27-02:45:44.451 2e68 Delete type=0 #3

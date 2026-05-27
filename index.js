@@ -11,6 +11,32 @@ const fs = require('fs');
 const path = require('path');
 const Fuse = require('fuse.js');
 
+// --- Process Error Handling ---
+// Catch unhandled Puppeteer/Protocol errors to prevent server crash
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+    if (reason && reason.message && reason.message.includes('Target closed')) {
+        console.log('Detected Puppeteer TargetCloseError. Cleaning up...');
+    }
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+    if (err && err.message && err.message.includes('Target closed')) {
+        console.log('Prevented crash from TargetCloseError.');
+    } else {
+        // For other errors, it's safer to log and let the process continue or exit gracefully
+    }
+});
+
+// Warn about Node version
+const nodeVersion = process.versions.node;
+if (parseInt(nodeVersion.split('.')[0]) > 22) {
+    console.warn(`\n⚠️  WARNING: You are using Node.js v${nodeVersion}.`);
+    console.warn('The whatsapp-web.js library is most stable on Node v20 or v22 (LTS).');
+    console.warn('Newer versions like v24 can cause "Target closed" or protocol errors.\n');
+}
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -129,11 +155,15 @@ const createClient = () => {
         io.emit('ready');
     });
 
-    client.on('disconnected', (reason) => {
+    client.on('disconnected', async (reason) => {
         console.log('Client was logged out', reason);
         botStatus = 'disconnected';
         io.emit('status', botStatus);
-        client.destroy();
+        try {
+            await client.destroy();
+        } catch (e) {
+            console.error('Error destroying client after disconnect:', e.message);
+        }
         client = null;
     });
 
