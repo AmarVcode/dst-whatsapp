@@ -127,7 +127,12 @@ const createClient = () => {
                 '--no-first-run',
                 '--no-zygote',
                 '--disable-gpu',
-                '--disable-extensions'
+                '--disable-extensions',
+                '--disable-setuid-sandbox',
+                '--no-first-run',
+                '--disable-dev-shm-usage',
+                '--single-process', // Use single process to save memory
+                '--js-flags="--max-old-space-size=300"' // Limit JS heap memory
             ],
             bypassCSP: true,
             executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null,
@@ -148,11 +153,27 @@ const createClient = () => {
         io.emit('authenticated');
     });
 
-    client.on('ready', () => {
+    // --- Ultra-Lightweight Optimization: Block heavy resources ---
+    client.on('ready', async () => {
         console.log('CLIENT READY');
         botStatus = 'connected';
         io.emit('status', botStatus);
         io.emit('ready');
+
+        // Access the internal puppeteer page to block resources
+        const page = client.pupPage;
+        if (page) {
+            await page.setRequestInterception(true);
+            page.on('request', (request) => {
+                const resourceType = request.resourceType();
+                if (['image', 'stylesheet', 'font', 'media'].includes(resourceType)) {
+                    request.abort();
+                } else {
+                    request.continue();
+                }
+            });
+            console.log('Resource blocking enabled: Images, CSS, Fonts, and Media are now disabled to save RAM.');
+        }
     });
 
     client.on('disconnected', async (reason) => {
