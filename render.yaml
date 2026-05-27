@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: whatsapp-chatbot
+    env: node
+    plan: starter # Note: Render starter plan or higher is required to attach persistent disks.
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: SESSION_DIR
+        value: /var/data/auth_session
+    disk:
+      name: session-disk
+      mountPath: /var/data
+      sizeGB: 1

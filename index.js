@@ -25,8 +25,15 @@ let sock = null;
 let currentStatus = 'disconnected';
 let currentQr = null;
 
-// Config file path for persistent settings
-const CONFIG_PATH = path.join(__dirname, 'config.json');
+// Session and config folder paths - optimized for persistent volumes (e.g. Render)
+const SESSION_DIR = process.env.SESSION_DIR || path.join(__dirname, 'auth_session');
+const CONFIG_PATH = path.join(SESSION_DIR, 'config.json');
+
+// Ensure session directory exists so config.json can be loaded/saved safely
+if (!fs.existsSync(SESSION_DIR)) {
+    fs.mkdirSync(SESSION_DIR, { recursive: true });
+}
+
 let config = {
     isBotActive: true,
     stats: {
@@ -95,11 +102,15 @@ async function resetSession() {
     io.emit('status_update', { status: currentStatus, qr: null });
     
     // 2. Remove session credentials folder
-    const authFolder = path.join(__dirname, 'auth_session');
     try {
-        if (fs.existsSync(authFolder)) {
-            // Delete folder contents recursively
-            fs.rmSync(authFolder, { recursive: true, force: true });
+        if (fs.existsSync(SESSION_DIR)) {
+            // Delete folder contents recursively except config.json
+            const files = fs.readdirSync(SESSION_DIR);
+            for (const file of files) {
+                if (file !== 'config.json') {
+                    fs.rmSync(path.join(SESSION_DIR, file), { recursive: true, force: true });
+                }
+            }
             logToDashboard('Authentication session deleted successfully.', 'system');
         }
     } catch (err) {
@@ -127,7 +138,7 @@ async function connectToWhatsApp() {
     }
 
     // 1. Session Persistence
-    const { state, saveCreds } = await useMultiFileAuthState('auth_session');
+    const { state, saveCreds } = await useMultiFileAuthState(SESSION_DIR);
     
     // 2. Initialize Baileys socket
     sock = makeWASocket({
