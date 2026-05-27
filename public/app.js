@@ -96,6 +96,7 @@ socket.on('status_update', (data) => {
 
 socket.on('bot_state', (data) => {
     const { isBotActive, stats } = data;
+    console.log('[DEBUG] Received bot_state from server:', data);
     
     // Set checkbox state without triggering change event
     isSettingToggleState = true;
@@ -117,6 +118,7 @@ botToggle.addEventListener('change', function() {
     if (isSettingToggleState) return;
     
     const isActive = this.checked;
+    console.log('[DEBUG] Checkbox changed. New value:', isActive);
     socket.emit('toggle_bot', isActive);
     logToConsole(`Auto-reply chatbot turned ${isActive ? 'ON' : 'OFF'}`, 'info');
 });

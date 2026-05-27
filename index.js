@@ -271,6 +271,7 @@ io.on('connection', (socket) => {
 
     // Handle toggle switch events
     socket.on('toggle_bot', (isActive) => {
+        logToDashboard(`[DEBUG] Received toggle_bot with value: ${isActive} (type: ${typeof isActive})`, 'system');
         config.isBotActive = isActive;
         saveConfig();
         io.emit('bot_state', { isBotActive: config.isBotActive, stats: config.stats });
