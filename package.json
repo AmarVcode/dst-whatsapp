@@ -1,0 +1,14 @@
+{
+  "name": "dst-whatsapp",
+  "version": "1.0.0",
+  "description": "WhatsApp chatbot built with @whiskeysockets/baileys",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.9",
+    "pino": "^9.1.0",
+    "qrcode-terminal": "^0.12.0"
+  }
+}
