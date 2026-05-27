@@ -235,7 +235,38 @@ async function connectToWhatsApp() {
             }
 
             const cleanText = text.toLowerCase();
-            if (cleanText === 'hi' || cleanText === 'hello') {
+            let replyText = '';
+            let showFooter = true;
+
+            if (cleanText === 'hi' || cleanText === 'hello' || cleanText === 'hey' || cleanText === 'menu' || cleanText === 'help' || cleanText === 'start') {
+                replyText = `Hello! Thanks for reaching out to *DST LogiPack* 📦\n\nWe provide industrial packaging, pallet solutions, fumigation, freight forwarding, and 3PL logistics under one roof.\n\nHow can we assist you today?\n1️⃣ *Pallet Solutions* (EPAL, Pinewood)\n2️⃣ *Wooden Boxes & Crates*\n3️⃣ *Fumigation & ISPM-15*\n4️⃣ *Freight Forwarding & Customs*\n5️⃣ *Warehousing & 3PL Storage*\n6️⃣ *Packaging Materials & Supplies*\n7️⃣ *Contact Information*\n8️⃣ *Pallet, Box & Container Calculator*`;
+                showFooter = false;
+            } else if (cleanText === '1' || cleanText.includes('pallet') || cleanText.includes('epal') || cleanText.includes('pine') || cleanText.includes('wood')) {
+                replyText = `*DST LogiPack - Pallet Solutions* 🪵\n\nWe are a leading EPAL pallet manufacturer and pinewood pallet supplier in India, offering:\n• Export-quality & heavy-duty wooden pallets\n• Custom-size & eco-friendly pallets\n• EPAL/Euro pallets with ISPM-15 stamping\n\n📐 *Need help with dimensions?* Try our Pallet Design Tool: https://dstlogipack.com/calc\n\nReply with your dimensions (L x W) and quantity to get a quote!`;
+            } else if (cleanText === '2' || cleanText.includes('box') || cleanText.includes('crate') || cleanText.includes('pack')) {
+                replyText = `*DST LogiPack - Wooden Boxes & Crates* 📦\n\nWe specialize in custom industrial packaging:\n• Heavy-duty export wooden boxes\n• Engineering wooden crates\n• Vacuum-packed wooden boxes for moisture protection\n\n📐 *Need a quick design breakdown?* Use our Box/Crate Calculator: https://dstlogipack.com/calc\n\nLet us know your machine/cargo dimensions to get a custom packing quote!`;
+            } else if (cleanText === '3' || cleanText.includes('fumi') || cleanText.includes('ispm') || cleanText.includes('heat') || cleanText.includes('compliance')) {
+                replyText = `*DST LogiPack - Fumigation & Compliance* 💨\n\nWe ensure your export cargo meets global standards with:\n• ISPM-15 heat treatment services\n• Methyl bromide container fumigation\n• Full compliance certificates for customs clearance\n\nDo you need a certificate for a specific port? Let us know.`;
+            } else if (cleanText === '4' || cleanText.includes('freight') || cleanText.includes('logist') || cleanText.includes('ship') || cleanText.includes('forward') || cleanText.includes('custom') || cleanText.includes('cha')) {
+                replyText = `*DST LogiPack - Freight & Logistics* 🚢✈️\n\nWe offer seamless domestic & international shipping:\n• Air & Sea Freight Forwarding (Import/Export)\n• Licensed Customs Clearance (CHA)\n• LCL consolidation & FCL container booking\n• Door-to-door delivery & NVOCC operations\n\n🚢 *Container Reference Tool:* Check container dimensions and capacities on our portal: https://dstlogipack.com/calc\n\nWhat is your cargo weight and destination?`;
+            } else if (cleanText === '5' || cleanText.includes('ware') || cleanText.includes('3pl') || cleanText.includes('stor')) {
+                replyText = `*DST LogiPack - Warehousing & 3PL* 🏢\n\nWe provide Pan-India warehousing and third-party logistics (3PL) solutions:\n• Multi-user & dedicated warehouse spaces\n• Professional inventory management & distribution\n• Secure storage with complete safety protocols\n\nLet us know your storage requirements (space or duration) for a quote!`;
+            } else if (cleanText === '6' || cleanText.includes('material') || cleanText.includes('belt') || cleanText.includes('bag') || cleanText.includes('desiccat') || cleanText.includes('wrap') || cleanText.includes('lash') || cleanText.includes('secur') || cleanText.includes('chock')) {
+                replyText = `*DST LogiPack - Packaging Materials & Cargo Securing* 📦\n\nWe supply high-quality industrial packaging materials and securing services:\n• Ratchet tension belts & strapping patti\n• LDPE packaging & shrink film wrapping\n• Dunnage air bags & container desiccants for moisture control\n• Container lashing, chocking, and ODC cargo securing for machinery\n\nDo you need a bulk supply or cargo securing services? Let us know!`;
+            } else if (cleanText === '7' || cleanText.includes('contact') || cleanText.includes('phone') || cleanText.includes('email') || cleanText.includes('address') || cleanText.includes('number') || cleanText.includes('call')) {
+                replyText = `*Contact DST LogiPack* 📞\n\n• *Phone/WhatsApp:* +91 96998 67990\n• *Email:* info@dstlogipack.com (or amarvcode@gmail.com)\n• *Website:* https://dstlogipack.com/\n\nFeel free to ask for a quotation or service inquiry!`;
+            } else if (cleanText === '8' || cleanText.includes('calculator') || cleanText.includes('calc') || cleanText.includes('tool') || cleanText.includes('dimension')) {
+                replyText = `*DST LogiPack - Pallet, Box & Container Tool* 📐📊\n\nUse our interactive online calculator to design pallets, calculate wooden box specifications, and check container dimensions:\n🔗 https://dstlogipack.com/calc`;
+            } else if (cleanText.includes('price') || cleanText.includes('quote') || cleanText.includes('cost') || cleanText.includes('rate') || cleanText.includes('enquiry') || cleanText.includes('quotation')) {
+                replyText = `*DST LogiPack - Get a Quote* ✍️📊\n\nWe would love to provide you with a customized quotation! Please reply with:\n\n1️⃣ *Your Name & Company Name*\n2️⃣ *Required Service* (e.g., EPAL Pallets, Warehousing, Freight)\n3️⃣ *Dimensions / Weight / Volume*\n4️⃣ *Quantity / Frequency*\n\nOnce you reply, our sales representative will reach out to you within 30 minutes!`;
+            } else if (cleanText.includes('track') || cleanText.includes('status') || cleanText.includes('where') || cleanText.includes('cargo') || cleanText.includes('booking') || cleanText.includes('container')) {
+                replyText = `*DST LogiPack - Track Shipment* 📍🚢\n\nTo track your consignment, please reply with your:\n• *Booking Number* (e.g. DST-XXXX)\n• *Container Number*\n\nAlternatively, you can track it directly on our customer calculator portal: https://dstlogipack.com/calc`;
+            }
+
+            if (replyText) {
+                if (showFooter) {
+                    replyText += `\n\n💡 _Type *menu* to see all options, *quote* for a price estimate, or *calc* to open the calculator._`;
+                }
                 // Anti-Ban Safety: Wait 1 to 3 seconds before replying
                 const delayMs = Math.floor(Math.random() * 2000) + 1000;
                 logToDashboard(`Scheduling auto-reply to ${senderName} in ${delayMs}ms...`, 'system');
@@ -249,7 +280,7 @@ async function connectToWhatsApp() {
                 }
 
                 try {
-                    await sock.sendMessage(jid, { text: 'Hello! How can I help you today?' });
+                    await sock.sendMessage(jid, { text: replyText });
                     config.stats.replied++;
                     saveConfig();
                     io.emit('bot_state', { isBotActive: config.isBotActive, stats: config.stats });

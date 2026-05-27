@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhatsApp Bot Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="glass-bg"></div>
     <div class="app-container">
@@ -17,7 +21,7 @@
             <div class="brand">
                 <div class="logo-icon">💬</div>
                 <div class="brand-text">
-                    <h1>Antigravity WA</h1>
+                    <h1>DST LogiPack WA</h1>
                     <p>WhatsApp Chatbot Control Panel</p>
                 </div>
             </div>
@@ -29,12 +33,12 @@
 
         <!-- Main Dashboard Layout -->
         <main class="dashboard-grid">
-            
+
             <!-- Left Panel: Connection & Authentication -->
             <section class="dashboard-card connection-card" id="connection-card">
                 <h2>Connection Status</h2>
                 <p class="section-desc">Scan the QR code below with your WhatsApp app to authenticate the bot.</p>
-                
+
                 <div class="qr-wrapper">
                     <!-- QR Scanner Screen -->
                     <div class="qr-container" id="qr-container">
@@ -44,7 +48,7 @@
                         </div>
                         <img id="qr-image" src="" alt="WhatsApp QR Code" class="hidden">
                     </div>
-                    
+
                     <!-- Connected Screen -->
                     <div class="connected-container hidden" id="connected-container">
                         <div class="success-icon">✓</div>
@@ -110,7 +114,8 @@
     <div class="modal-overlay hidden" id="reset-modal">
         <div class="modal-content">
             <h3>Reset WhatsApp Session?</h3>
-            <p>This action will delete your existing WhatsApp authentication session and log you out. You will need to scan the QR code again to connect the bot.</p>
+            <p>This action will delete your existing WhatsApp authentication session and log you out. You will need to
+                scan the QR code again to connect the bot.</p>
             <div class="modal-actions">
                 <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
                 <button class="btn btn-danger" id="modal-confirm">Yes, Reset Session</button>
@@ -122,4 +127,5 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="app.js"></script>
 </body>
+
 </html>
