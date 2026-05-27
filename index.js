@@ -104,6 +104,7 @@ const createClient = () => {
                 '--disable-extensions'
             ],
             bypassCSP: true,
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null,
         }
     });
 
